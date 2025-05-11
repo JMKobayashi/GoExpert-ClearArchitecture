@@ -8,4 +8,5 @@ import "github.com/JMKobayashi/GoExpert-ClearArchitecture/internal/usecase"
 
 type Resolver struct {
 	CreateOrderUseCase usecase.CreateOrderUseCase
+	ListOrdersUseCase  usecase.ListOrdersUseCase
 }

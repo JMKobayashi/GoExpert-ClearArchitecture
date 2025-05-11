@@ -9,6 +9,7 @@ import (
 	"github.com/JMKobayashi/GoExpert-ClearArchitecture/internal/entity"
 	"github.com/JMKobayashi/GoExpert-ClearArchitecture/internal/event"
 	"github.com/JMKobayashi/GoExpert-ClearArchitecture/internal/infra/database"
+	"github.com/JMKobayashi/GoExpert-ClearArchitecture/internal/infra/http/handlers"
 	"github.com/JMKobayashi/GoExpert-ClearArchitecture/internal/infra/web"
 	"github.com/JMKobayashi/GoExpert-ClearArchitecture/internal/usecase"
 	"github.com/JMKobayashi/GoExpert-ClearArchitecture/pkg/events"
@@ -39,6 +40,23 @@ func NewCreateOrderUseCase(db *sql.DB, eventDispatcher events.EventDispatcherInt
 		usecase.NewCreateOrderUseCase,
 	)
 	return &usecase.CreateOrderUseCase{}
+}
+
+func NewListOrdersUseCase(db *sql.DB) *usecase.ListOrdersUseCase {
+	wire.Build(
+		setOrderRepositoryDependency,
+		usecase.NewListOrdersUseCase,
+	)
+	return &usecase.ListOrdersUseCase{}
+}
+
+func NewListOrdersHandler(db *sql.DB) *handlers.ListOrdersHandler {
+	wire.Build(
+		setOrderRepositoryDependency,
+		usecase.NewListOrdersUseCase,
+		handlers.NewListOrdersHandler,
+	)
+	return &handlers.ListOrdersHandler{}
 }
 
 func NewWebOrderHandler(db *sql.DB, eventDispatcher events.EventDispatcherInterface) *web.WebOrderHandler {
