@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"os"
 
 	graphql_handler "github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
@@ -24,9 +25,12 @@ import (
 )
 
 func main() {
-	configs, err := configs.LoadConfig(".")
+	// Define the expected config file path inside the container
+	configFilePath := "/app/.env" // Path where the .env file is mounted
+
+	configs, err := configs.LoadConfig(configFilePath) // Pass the full path
 	if err != nil {
-		panic(err)
+		panic(fmt.Sprintf("Failed to load configuration from %s: %v", configFilePath, err)) // Improved panic message
 	}
 
 	db, err := sql.Open(configs.DBDriver, fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", configs.DBUser, configs.DBPassword, configs.DBHost, configs.DBPort, configs.DBName))
@@ -79,7 +83,11 @@ func main() {
 }
 
 func getRabbitMQChannel() *amqp.Channel {
-	conn, err := amqp.Dial("amqp://guest:guest@localhost:5672/")
+	rabbitMQHost := os.Getenv("RABBITMQ_HOST")
+	if rabbitMQHost == "" {
+		rabbitMQHost = "localhost"
+	}
+	conn, err := amqp.Dial(fmt.Sprintf("amqp://guest:guest@%s:5672/", rabbitMQHost))
 	if err != nil {
 		panic(err)
 	}

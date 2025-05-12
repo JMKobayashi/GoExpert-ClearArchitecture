@@ -24,3 +24,43 @@ services:
     environment:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      mysql:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      DB_DRIVER: mysql
+      DB_USER: root
+      DB_PASSWORD: root
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: orders
+      RABBITMQ_HOST: rabbitmq
+    volumes:
+      - ./cmd/ordersystem/.env:/app/.env
+    ports:
+      - "8000:8000"
+      - "8080:8080"
+      - "50051:50051"
+
+  migrate:
+    image: golang:1.23
+    volumes:
+      - .:/app
+    working_dir: /app
+    depends_on:
+      - mysql
+    command: >
+      sh -c "go install -tags 'mysql' github.com/golang-migrate/migrate/v4/cmd/migrate@latest &&
+             migrate -path internal/infra/database/migrations -database 'mysql://root:root@tcp(mysql:3306)/orders' up"

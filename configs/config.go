@@ -1,6 +1,10 @@
 package configs
 
-import "github.com/spf13/viper"
+import (
+	"fmt"
+
+	"github.com/spf13/viper"
+)
 
 type conf struct {
 	DBDriver          string `mapstructure:"DB_DRIVER"`
@@ -14,20 +18,22 @@ type conf struct {
 	GraphQLServerPort string `mapstructure:"GRAPHQL_SERVER_PORT"`
 }
 
-func LoadConfig(path string) (*conf, error) {
+// LoadConfig loads configuration from a specific file path.
+func LoadConfig(configFilePath string) (*conf, error) {
 	var cfg *conf
-	viper.SetConfigName("app_config")
+	viper.SetConfigFile(configFilePath)
 	viper.SetConfigType("env")
-	viper.AddConfigPath(path)
-	viper.SetConfigFile(".env")
-	viper.AutomaticEnv()
+
 	err := viper.ReadInConfig()
 	if err != nil {
-		panic(err)
+		return nil, fmt.Errorf("error reading config file %s: %w", configFilePath, err)
 	}
+
+	viper.AutomaticEnv()
+
 	err = viper.Unmarshal(&cfg)
 	if err != nil {
-		panic(err)
+		return nil, fmt.Errorf("error unmarshalling config: %w", err)
 	}
-	return cfg, err
+	return cfg, nil
 }
